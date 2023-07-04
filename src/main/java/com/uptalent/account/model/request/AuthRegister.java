@@ -1,4 +1,4 @@
-package com.uptalent.account.model;
+package com.uptalent.account.model.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
