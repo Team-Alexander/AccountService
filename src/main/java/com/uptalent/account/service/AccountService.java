@@ -1,31 +1,67 @@
 package com.uptalent.account.service;
 
+import com.uptalent.account.model.entity.Account;
+import com.uptalent.account.model.entity.Sponsor;
+import com.uptalent.account.model.entity.Talent;
+import com.uptalent.account.model.enums.Role;
+import com.uptalent.account.model.request.AuthRegister;
+import com.uptalent.account.model.response.AuthResponse;
 import com.uptalent.account.repository.AccountRepository;
+import com.uptalent.account.repository.SponsorRepository;
+import com.uptalent.account.repository.TalentRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.oauth2.jwt.Jwt;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import static com.uptalent.account.model.constant.RegisterConstant.ACCOUNT_NOT_FOUND_ERROR;
+import static com.uptalent.account.model.enums.Role.TALENT;
 
 @Service
 @RequiredArgsConstructor
-public class AccountService implements UserDetailsService {
+@Transactional(readOnly = true)
+public class AccountService {
+    private final TalentRepository talentRepository;
+    private final SponsorRepository sponsorRepository;
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    @Override
-    public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        return accountRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new UsernameNotFoundException(String.format(ACCOUNT_NOT_FOUND_ERROR, email)));
+    @Transactional
+    public AuthResponse save(AuthRegister authRegister) {
+        Account account = Account.builder()
+                .email(authRegister.getEmail())
+                .password(passwordEncoder.encode(authRegister.getPassword()))
+                .role(Role.valueOf(authRegister.getRole()))
+                .build();
+
+        account = accountRepository.save(account);
+
+        if (authRegister.getRole().equals(TALENT.toString()))
+            return registerTalent(authRegister, account);
+        else
+            return registerSponsor(authRegister, account);
     }
 
-    public Long getIdFromSubject() {
-        if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof Jwt jwt) {
-            return Long.parseLong(jwt.getSubject());
-        }
-        return 0L;
+    private AuthResponse registerTalent(AuthRegister authRegister, Account account) {
+        String [] fullName = authRegister.getName().split(" ");
+        Talent talent = Talent.builder()
+                .lastname(fullName[0])
+                .firstname(fullName[1])
+                .account(account)
+                .build();
+
+        talent = talentRepository.save(talent);
+
+        return new AuthResponse(talent.getId(), talent.getFirstname(), account.getRole().toString());
+    }
+
+    private AuthResponse registerSponsor(AuthRegister authRegister, Account account) {
+        Sponsor sponsor = Sponsor.builder()
+                .fullname(authRegister.getName())
+                .account(account)
+                .build();
+
+        sponsor = sponsorRepository.save(sponsor);
+
+        return new AuthResponse(sponsor.getId(), sponsor.getFullname(), account.getRole().toString());
     }
 }
