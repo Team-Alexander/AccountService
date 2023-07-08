@@ -2,7 +2,7 @@ package com.uptalent.account.jwt;
 
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.JWTParser;
-import lombok.extern.slf4j.Slf4j;
+import lombok.SneakyThrows;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -12,20 +12,15 @@ import java.util.List;
 
 import static com.uptalent.account.jwt.JwtConstant.ROLE_CLAIM;
 
-@Slf4j
 public final class JwtParser {
     private JwtParser(){}
 
+    @SneakyThrows
     public static Authentication getAuthentication(String token) {
-        try {
-            JWTClaimsSet claimsSet = parseJwt(token);
-            long id = getIdFromSubject(claimsSet);
-            GrantedAuthority authority = getAuthority(claimsSet);
-            return new UsernamePasswordAuthenticationToken(id, null, List.of(authority));
-        } catch (ParseException e) {
-            log.error("Error when parsing jwt: ", e);
-        }
-        return null;
+        JWTClaimsSet claimsSet = parseJwt(token);
+        long id = getIdFromSubject(claimsSet);
+        GrantedAuthority authority = getAuthority(claimsSet);
+        return new UsernamePasswordAuthenticationToken(id, null, List.of(authority));
     }
 
     public static JWTClaimsSet parseJwt(String token) throws ParseException {
