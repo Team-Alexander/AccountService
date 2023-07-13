@@ -29,12 +29,6 @@ public class Account implements UserDetails {
     @Enumerated(EnumType.STRING)
     private Role role;
 
-    @OneToOne(mappedBy = "account")
-    private Sponsor sponsor;
-
-    @OneToOne(mappedBy = "account")
-    private Talent talent;
-
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(role);

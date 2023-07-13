@@ -1,6 +1,5 @@
 package com.uptalent.account.model.entity;
 
-import com.uptalent.account.model.entity.Account;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,7 +14,7 @@ public class Sponsor {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @OneToOne
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             name = "sponsor_account",
             joinColumns = @JoinColumn(name = "sponsor_id"),

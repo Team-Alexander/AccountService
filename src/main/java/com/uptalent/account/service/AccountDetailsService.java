@@ -7,7 +7,7 @@ import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
-import static com.uptalent.account.model.constant.AccountConstant.ACCOUNT_NOT_FOUND_ERROR;
+import static com.uptalent.account.util.constant.AccountConstant.ACCOUNT_NOT_FOUND_ERROR;
 
 @Service
 @RequiredArgsConstructor
