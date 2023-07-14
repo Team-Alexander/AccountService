@@ -2,6 +2,7 @@ package com.uptalent.account.service;
 
 import com.uptalent.account.model.enums.Role;
 import com.uptalent.account.model.request.AuthRegister;
+import com.uptalent.account.service.strategy.SponsorDeletionStrategy;
 import com.uptalent.account.service.strategy.TalentDeletionStrategy;
 import com.uptalent.account.service.visitor.AccountRegisterVisitor;
 import com.uptalent.account.service.visitor.AccountUpdateVisitor;
@@ -12,6 +13,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import static com.uptalent.account.model.enums.Role.SPONSOR;
 import static com.uptalent.account.model.enums.Role.TALENT;
 
 @Service
@@ -22,6 +24,7 @@ public class AccountService {
     private final AccountRegisterVisitor accountRegisterVisitor;
     private final AccountSecurityService accountSecurityService;
     private final TalentDeletionStrategy talentDeletionStrategy;
+    private final SponsorDeletionStrategy sponsorDeletionStrategy;
 
     public AuthResponse save(AuthRegister authRegister) {
         return authRegister.accept(accountRegisterVisitor);
@@ -33,8 +36,11 @@ public class AccountService {
 
     public void deleteProfile(Long id) {
         Role role = accountSecurityService.getRoleFromAuthorities();
-        if (TALENT.equals(role)) {
+
+        if (role.equals(TALENT)) {
             talentDeletionStrategy.deleteProfile(id);
+        } else if (role.equals(SPONSOR)) {
+            sponsorDeletionStrategy.deleteProfile(id);
         }
     }
 }

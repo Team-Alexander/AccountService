@@ -24,4 +24,10 @@ public class Sponsor {
 
     @Column(length = 30, nullable = false, name = "fullname")
     private String fullname;
+
+    @Column(name = "avatar")
+    private String avatar;
+
+    @Column(name = "kudos", nullable = false, columnDefinition="bigint default 0")
+    private Long kudos;
 }
