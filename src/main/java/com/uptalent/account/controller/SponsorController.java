@@ -18,7 +18,7 @@ public class SponsorController {
     private final SponsorService sponsorService;
 
     @GetMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal and hasAuthority('SPONSOR')")
+    @PreAuthorize("isAuthenticated()")
     public AccountProfile getSponsorProfile(@PathVariable Long id){
         return sponsorService.getSponsorProfile(id);
     }
