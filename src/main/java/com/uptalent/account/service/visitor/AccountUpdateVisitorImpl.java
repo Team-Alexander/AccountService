@@ -1,8 +1,11 @@
 package com.uptalent.account.service.visitor;
 
 import com.uptalent.account.exception.InvalidAgeException;
+import com.uptalent.account.exception.SponsorNotFoundException;
 import com.uptalent.account.exception.TalentNotFoundException;
+import com.uptalent.account.mapper.SponsorMapper;
 import com.uptalent.account.mapper.TalentMapper;
+import com.uptalent.account.model.entity.Sponsor;
 import com.uptalent.account.model.entity.Talent;
 import com.uptalent.account.model.property.TalentAgeRange;
 import com.uptalent.account.model.request.SponsorUpdate;
@@ -21,40 +24,49 @@ public class AccountUpdateVisitorImpl implements AccountUpdateVisitor{
     private final TalentRepository talentRepository;
     private final SponsorRepository sponsorRepository;
     private final TalentMapper talentMapper;
+    private final SponsorMapper sponsorMapper;
     private final TalentAgeRange talentAgeRange;
 
     @Override
-    public AccountProfile updateProfile(Long id, TalentUpdate updatedTalent) {
+    public AccountProfile updateProfile(Long id, TalentUpdate talentUpdate) {
         Talent talentToUpdate  = getTalentById(id);
-        talentToUpdate.setLastname(updatedTalent.getLastname());
-        talentToUpdate.setFirstname(updatedTalent.getFirstname());
-        LocalDate birthday = updatedTalent.getBirthday();
+        talentToUpdate.setLastname(talentUpdate.getLastname());
+        talentToUpdate.setFirstname(talentUpdate.getFirstname());
+        LocalDate birthday = talentUpdate.getBirthday();
 
         if(birthday != null) {
             if (birthday.isBefore(LocalDate.now().minusYears(talentAgeRange.getMaxAge())) ||
                     birthday.isAfter(LocalDate.now().minusYears(talentAgeRange.getMinAge()))) {
                 throw new InvalidAgeException();
             }
-            talentToUpdate.setBirthday(updatedTalent.getBirthday());
+            talentToUpdate.setBirthday(talentUpdate.getBirthday());
         }
-        if(updatedTalent.getLocation() != null) {
-            talentToUpdate.setLocation(updatedTalent.getLocation());
+        if(talentUpdate.getLocation() != null) {
+            talentToUpdate.setLocation(talentUpdate.getLocation());
         }
-        if(updatedTalent.getAboutMe() != null) {
-            talentToUpdate.setAboutMe(updatedTalent.getAboutMe());
+        if(talentUpdate.getAboutMe() != null) {
+            talentToUpdate.setAboutMe(talentUpdate.getAboutMe());
         }
-        Talent savedTalent = talentRepository.save(talentToUpdate);
+        Talent updatedTalent = talentRepository.save(talentToUpdate);
 
-        return talentMapper.toTalentFullProfile(savedTalent);
+        return talentMapper.toTalentFullProfile(updatedTalent);
     }
 
     @Override
     public AccountProfile updateProfile(Long id, SponsorUpdate sponsorUpdate) {
-        //TODO implement
-        return null;
+        Sponsor sponsorToUpdate  = getSponsorById(id);
+        sponsorToUpdate.setFullname(sponsorUpdate.getFullname());
+
+        Sponsor updatedSponsor = sponsorRepository.save(sponsorToUpdate);
+
+        return sponsorMapper.toSponsorProfile(updatedSponsor);
     }
 
-    private Talent getTalentById(Long id){
+    private Talent getTalentById(Long id) {
         return talentRepository.findById(id).orElseThrow(TalentNotFoundException::new);
+    }
+
+    private Sponsor getSponsorById(Long id) {
+        return sponsorRepository.findById(id).orElseThrow(SponsorNotFoundException::new);
     }
 }
