@@ -1,6 +1,7 @@
 package com.uptalent.account.service.visitor;
 
 import com.uptalent.account.model.entity.Account;
+import com.uptalent.account.model.entity.Sponsor;
 import com.uptalent.account.model.entity.Talent;
 import com.uptalent.account.model.enums.Role;
 import com.uptalent.account.model.request.AuthRegister;
@@ -14,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import static com.uptalent.account.model.enums.Role.SPONSOR;
 import static com.uptalent.account.model.enums.Role.TALENT;
 
 @Service
@@ -40,8 +42,14 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
 
     @Override
     public AuthResponse registerProfile(SponsorRegister sponsorRegister) {
-        //TODO implement
-        return null;
+        Account account = saveAccount(sponsorRegister, SPONSOR);
+        Sponsor sponsor = Sponsor.builder()
+                .fullname(sponsorRegister.getFullname())
+                .build();
+
+        sponsor = sponsorRepository.save(sponsor);
+
+        return new AuthResponse(sponsor.getId(), sponsor.getFullname(), account.getRole().toString());
     }
 
     private Account saveAccount(AuthRegister authRegister, Role role){
