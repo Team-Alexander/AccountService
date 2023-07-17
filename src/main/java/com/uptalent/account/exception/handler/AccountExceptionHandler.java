@@ -6,6 +6,7 @@ import com.uptalent.account.exception.UserNotFoundException;
 import com.uptalent.account.util.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -33,5 +34,11 @@ public class AccountExceptionHandler {
     @ExceptionHandler(AccessDeniedException.class)
     public ErrorResponse handlerAccessDeniedException() {
         return new ErrorResponse(ACCESS_DENIED_MESSAGE);
+    }
+
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    @ExceptionHandler(BadCredentialsException.class)
+    public ErrorResponse handlerBadCredentialsException(BadCredentialsException e) {
+        return new ErrorResponse(e.getMessage());
     }
 }
