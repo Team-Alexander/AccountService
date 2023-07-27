@@ -8,6 +8,7 @@ import org.mapstruct.Mapping;
 
 @Mapper
 public interface TalentMapper {
+    @Mapping(source = "talent.account.email", target = "email")
     @Mapping(target = "name", expression = "java(talent.getFirstname() + \" \" + talent.getLastname())")
     TalentFullProfile toTalentFullProfile(Talent talent);
 

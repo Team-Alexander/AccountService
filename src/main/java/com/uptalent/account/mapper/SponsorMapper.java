@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 
 @Mapper
 public interface SponsorMapper {
+    @Mapping(source = "sponsor.account.email", target = "email")
     @Mapping(source = "sponsor.fullname", target = "name")
     SponsorProfile toSponsorProfile(Sponsor sponsor);
 }
