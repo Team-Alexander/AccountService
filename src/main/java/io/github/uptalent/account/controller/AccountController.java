@@ -1,0 +1,34 @@
+package io.github.uptalent.account.controller;
+
+import io.github.uptalent.account.model.common.Author;
+import io.github.uptalent.account.model.request.AuthLogin;
+import io.github.uptalent.account.model.request.AuthRegister;
+import io.github.uptalent.account.model.response.AuthResponse;
+import io.github.uptalent.account.service.AccountService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequiredArgsConstructor
+@RequestMapping("/api/v1/account")
+public class AccountController {
+    private final AccountService accountService;
+
+    @PostMapping("/save")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AuthResponse save(@RequestBody AuthRegister authRegister) {
+        return accountService.save(authRegister);
+    }
+
+    @PostMapping("/login")
+    @ResponseStatus(HttpStatus.OK)
+    public AuthResponse login(@RequestBody AuthLogin authLogin) {
+        return accountService.login(authLogin);
+    }
+
+    @GetMapping("/author")
+    public Author getAuthor() {
+        return accountService.getAuthor();
+    }
+}
