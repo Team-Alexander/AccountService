@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import static io.github.uptalent.starter.util.Constants.USER_ID_KEY;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/account/talents")
@@ -23,17 +25,17 @@ public class TalentController {
         return talentService.getTalentProfile(id);
     }
 
-    @PatchMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal and hasAuthority('TALENT')")
-    public AccountProfile updateTalent(@PathVariable Long id,
+    @PatchMapping
+    @PreAuthorize("hasAuthority('TALENT')")
+    public AccountProfile updateTalent(@RequestHeader(USER_ID_KEY) Long id,
                                        @RequestBody @Valid TalentUpdate talentUpdate){
         return accountService.updateProfile(id, talentUpdate);
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal and hasAuthority('TALENT')")
+    @DeleteMapping
+    @PreAuthorize("hasAuthority('TALENT')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTalent(@PathVariable Long id){
+    public void deleteTalent(@RequestHeader(USER_ID_KEY) Long id){
         accountService.deleteProfile(id);
     }
 }
