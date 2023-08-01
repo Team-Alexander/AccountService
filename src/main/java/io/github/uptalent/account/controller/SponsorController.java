@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import static io.github.uptalent.starter.util.Constants.USER_ID_KEY;
+
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/account/sponsors")
@@ -23,17 +25,17 @@ public class SponsorController {
         return sponsorService.getSponsorProfile(id);
     }
 
-    @PatchMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal and hasAuthority('SPONSOR')")
-    public AccountProfile updateSponsor(@PathVariable Long id,
+    @PatchMapping
+    @PreAuthorize("hasAuthority('SPONSOR')")
+    public AccountProfile updateSponsor(@RequestHeader(USER_ID_KEY) Long id,
                                         @RequestBody @Valid SponsorUpdate sponsorUpdate){
         return accountService.updateProfile(id, sponsorUpdate);
     }
 
-    @DeleteMapping("/{id}")
-    @PreAuthorize("#id == authentication.principal and hasAuthority('SPONSOR')")
+    @DeleteMapping
+    @PreAuthorize("hasAuthority('SPONSOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTalent(@PathVariable Long id){
+    public void deleteSponsor(@RequestHeader(USER_ID_KEY) Long id){
         accountService.deleteProfile(id);
     }
 }
