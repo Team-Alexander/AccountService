@@ -2,6 +2,7 @@ package io.github.uptalent.account.exception.handler;
 
 import io.github.uptalent.account.exception.InvalidAgeException;
 import io.github.uptalent.account.exception.NoSuchRoleException;
+import io.github.uptalent.account.exception.UserAlreadyExistsException;
 import io.github.uptalent.account.exception.UserNotFoundException;
 import io.github.uptalent.starter.util.ErrorResponse;
 import org.springframework.http.HttpStatus;
@@ -18,12 +19,18 @@ public class AccountExceptionHandler {
         return new ErrorResponse(e.getMessage());
     }
 
+    @ResponseStatus(HttpStatus.CONFLICT)
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ErrorResponse handlerConflictException(UserAlreadyExistsException e) {
+        return new ErrorResponse(e.getMessage());
+    }
+
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({
             InvalidAgeException.class,
             NoSuchRoleException.class
     })
-    public ErrorResponse handlerInvalidAgeException(RuntimeException e) {
+    public ErrorResponse handlerBadRequestException(RuntimeException e) {
         return new ErrorResponse(e.getMessage());
     }
 

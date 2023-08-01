@@ -1,6 +1,8 @@
 package io.github.uptalent.account.service;
 
 import io.github.uptalent.account.exception.NoSuchRoleException;
+import io.github.uptalent.account.exception.UserAlreadyExistsException;
+import io.github.uptalent.account.exception.UserNotFoundException;
 import io.github.uptalent.account.model.common.Author;
 import io.github.uptalent.account.model.entity.Account;
 import io.github.uptalent.account.model.entity.Sponsor;
@@ -9,7 +11,6 @@ import io.github.uptalent.account.model.enums.Role;
 import io.github.uptalent.account.model.request.AuthLogin;
 import io.github.uptalent.account.model.request.AuthRegister;
 import io.github.uptalent.account.repository.AccountRepository;
-import io.github.uptalent.account.repository.SponsorRepository;
 import io.github.uptalent.account.service.strategy.SponsorDeletionStrategy;
 import io.github.uptalent.account.service.strategy.TalentDeletionStrategy;
 import io.github.uptalent.account.service.visitor.AccountRegisterVisitor;
@@ -33,19 +34,23 @@ public class AccountService {
     private final TalentDeletionStrategy talentDeletionStrategy;
     private final SponsorDeletionStrategy sponsorDeletionStrategy;
     private final AccountRepository accountRepository;
-    private final SponsorRepository sponsorRepository;
     private final PasswordEncoder passwordEncoder;
     private final TalentService talentService;
     private final SponsorService sponsorService;
 
     public AuthResponse save(AuthRegister authRegister) {
+        String email = authRegister.getEmail();
+        if(accountRepository.existsByEmailIgnoreCase(email)) {
+            throw new UserAlreadyExistsException("Account with email [" + email + "] already exists");
+        }
+
         return authRegister.accept(accountRegisterVisitor);
     }
 
     public AuthResponse login(AuthLogin authLogin) {
         String email = authLogin.getEmail();
         Account foundAccount = accountRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new BadCredentialsException("Account with email [" + email + "] does not exist"));
+                .orElseThrow(() -> new UserNotFoundException("Account with email [" + email + "] does not exist"));
 
         if (!passwordEncoder.matches(authLogin.getPassword(), foundAccount.getPassword()))
             throw new BadCredentialsException("Invalid email or password");
@@ -67,10 +72,7 @@ public class AccountService {
         }
     }
 
-    public Author getAuthor() {
-        Long id = accountSecurityService.getIdFromPrincipal();
-        Role role = accountSecurityService.getRoleFromAuthorities();
-
+    public Author getAuthor(Long id, Role role) {
         if (role.equals(Role.TALENT)) {
             return talentService.getAuthorById(id);
         } else if (role.equals(Role.SPONSOR)) {
@@ -83,19 +85,21 @@ public class AccountService {
         if (account.getRole().equals(Role.SPONSOR)) {
             Sponsor sponsor = sponsorService.getSponsorByAccount(account);
 
-            return new AuthResponse(
-                    sponsor.getId(),
-                    sponsor.getFullname(),
-                    Role.SPONSOR.name()
-            );
+            return AuthResponse.builder()
+                    .id(sponsor.getId())
+                    .name(sponsor.getFullname())
+                    .email(account.getEmail())
+                    .role(Role.SPONSOR)
+                    .build();
         } else {
             Talent talent = talentService.getTalentByAccount(account);
 
-            return new AuthResponse(
-                    talent.getId(),
-                    talent.getFirstname(),
-                    Role.TALENT.name()
-            );
+            return AuthResponse.builder()
+                    .id(talent.getId())
+                    .name(talent.getFirstname())
+                    .email(account.getEmail())
+                    .role(Role.TALENT)
+                    .build();
         }
     }
 }

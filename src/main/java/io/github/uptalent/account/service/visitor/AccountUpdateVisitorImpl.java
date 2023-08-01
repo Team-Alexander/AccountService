@@ -1,5 +1,6 @@
 package io.github.uptalent.account.service.visitor;
 
+import io.github.uptalent.account.client.ContentClient;
 import io.github.uptalent.account.exception.InvalidAgeException;
 import io.github.uptalent.account.mapper.SponsorMapper;
 import io.github.uptalent.account.mapper.TalentMapper;
@@ -28,6 +29,7 @@ public class AccountUpdateVisitorImpl implements AccountUpdateVisitor{
     private final TalentMapper talentMapper;
     private final SponsorMapper sponsorMapper;
     private final TalentAgeRange talentAgeRange;
+    private final ContentClient contentClient;
 
     @Override
     public AccountProfile updateProfile(Long id, TalentUpdate talentUpdate) {
@@ -50,6 +52,8 @@ public class AccountUpdateVisitorImpl implements AccountUpdateVisitor{
             talentToUpdate.setAboutMe(talentUpdate.getAboutMe());
         }
         Talent updatedTalent = talentRepository.save(talentToUpdate);
+
+        contentClient.updateProofsByAuthor(talentMapper.toAuthorUpdate(updatedTalent));
 
         return talentMapper.toTalentFullProfile(updatedTalent);
     }

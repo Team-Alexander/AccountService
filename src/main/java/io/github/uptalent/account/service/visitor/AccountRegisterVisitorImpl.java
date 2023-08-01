@@ -34,7 +34,12 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
 
         talent = talentRepository.save(talent);
 
-        return new AuthResponse(talent.getId(), talent.getFirstname(), account.getRole().toString());
+        return AuthResponse.builder()
+                .id(talent.getId())
+                .name(talent.getFirstname())
+                .email(account.getEmail())
+                .role(Role.TALENT)
+                .build();
     }
 
     @Override
@@ -42,11 +47,17 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
         Account account = saveAccount(sponsorRegister, Role.SPONSOR);
         Sponsor sponsor = Sponsor.builder()
                 .fullname(sponsorRegister.getFullname())
+                .account(account)
                 .build();
 
         sponsor = sponsorRepository.save(sponsor);
 
-        return new AuthResponse(sponsor.getId(), sponsor.getFullname(), account.getRole().toString());
+        return AuthResponse.builder()
+                .id(sponsor.getId())
+                .name(sponsor.getFullname())
+                .email(account.getEmail())
+                .role(Role.SPONSOR)
+                .build();
     }
 
     private Account saveAccount(AuthRegister authRegister, Role role){
