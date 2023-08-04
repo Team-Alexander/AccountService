@@ -28,7 +28,7 @@ public class SponsorController {
     @PatchMapping
     @PreAuthorize("hasAuthority('SPONSOR')")
     public AccountProfile updateSponsor(@RequestHeader(USER_ID_KEY) Long id,
-                                        @RequestBody @Valid SponsorUpdate sponsorUpdate){
+                                        @Valid @RequestBody  SponsorUpdate sponsorUpdate){
         return accountService.updateProfile(id, sponsorUpdate);
     }
 
@@ -37,5 +37,18 @@ public class SponsorController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSponsor(@RequestHeader(USER_ID_KEY) Long id){
         accountService.deleteProfile(id);
+    }
+
+    @GetMapping("/balance")
+    @PreAuthorize("hasAuthority('SPONSOR')")
+    public Long getSponsorBalance(@RequestHeader(USER_ID_KEY) Long id){
+        return sponsorService.getSponsorBalanceById(id);
+    }
+
+    @PatchMapping("/balance")
+    @PreAuthorize("hasAuthority('SPONSOR')")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void updateSponsorBalance(@RequestHeader(USER_ID_KEY) Long id, @RequestBody Long balance){
+        sponsorService.updateSponsorBalanceById(id, balance);
     }
 }

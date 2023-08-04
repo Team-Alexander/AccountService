@@ -48,6 +48,7 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
         Sponsor sponsor = Sponsor.builder()
                 .fullname(sponsorRegister.getFullname())
                 .account(account)
+                .kudos(50L)
                 .build();
 
         sponsor = sponsorRepository.save(sponsor);
