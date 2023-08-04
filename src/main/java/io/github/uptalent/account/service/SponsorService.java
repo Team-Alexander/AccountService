@@ -44,4 +44,14 @@ public class SponsorService {
         return sponsorRepository.getAuthorById(id)
                 .orElseThrow(SponsorNotFoundException::new);
     }
+
+    public Long getSponsorBalanceById(long id) {
+        return getSponsorById(id).getKudos();
+    }
+
+    @Transactional
+    public void updateSponsorBalanceById(Long id, Long balance) {
+        Sponsor sponsor = getSponsorById(id);
+        sponsor.setKudos(balance);
+    }
 }
