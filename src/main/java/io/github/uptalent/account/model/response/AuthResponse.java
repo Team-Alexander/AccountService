@@ -1,6 +1,6 @@
 package io.github.uptalent.account.model.response;
 
-import io.github.uptalent.account.model.enums.Role;
+import io.github.uptalent.starter.security.Role;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
