@@ -1,11 +1,11 @@
 package io.github.uptalent.account.controller;
 
 import io.github.uptalent.account.model.common.Author;
-import io.github.uptalent.account.model.enums.Role;
 import io.github.uptalent.account.model.request.AuthLogin;
 import io.github.uptalent.account.model.request.AuthRegister;
 import io.github.uptalent.account.model.response.AuthResponse;
 import io.github.uptalent.account.service.AccountService;
+import io.github.uptalent.starter.security.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

@@ -1,7 +1,7 @@
 package io.github.uptalent.account.service;
 
 import io.github.uptalent.account.exception.NoSuchRoleException;
-import io.github.uptalent.account.model.enums.Role;
+import io.github.uptalent.starter.security.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;

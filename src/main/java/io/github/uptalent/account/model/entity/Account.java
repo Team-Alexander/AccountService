@@ -1,6 +1,6 @@
 package io.github.uptalent.account.model.entity;
 
-import io.github.uptalent.account.model.enums.Role;
+import io.github.uptalent.starter.security.Role;
 import jakarta.persistence.*;
 import lombok.*;
 import org.springframework.security.core.GrantedAuthority;
@@ -26,6 +26,7 @@ public class Account implements UserDetails {
 
     @Column(name = "password")
     private String password;
+
     @Enumerated(EnumType.STRING)
     private Role role;
 
