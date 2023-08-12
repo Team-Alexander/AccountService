@@ -1,11 +1,9 @@
 package io.github.uptalent.account.service;
 
 import io.github.uptalent.account.exception.NoSuchRoleException;
-import io.github.uptalent.account.exception.UserAlreadyExistsException;
 import io.github.uptalent.account.exception.UserNotFoundException;
 import io.github.uptalent.account.model.common.Author;
-import io.github.uptalent.account.model.common.EmailMessageInfo;
-import io.github.uptalent.account.model.constant.EmailMessageLinkType;
+import io.github.uptalent.account.model.common.EmailMessageDetailInfo;
 import io.github.uptalent.account.model.entity.Account;
 import io.github.uptalent.account.model.entity.Sponsor;
 import io.github.uptalent.account.model.entity.Talent;
@@ -49,18 +47,18 @@ public class AccountService {
     private final TalentService talentService;
     private final SponsorService sponsorService;
     private final TokenEmailRepository tokenEmailRepository;
-    private final EmailMessageService emailMessageService;
+    private final EmailProducerService emailProducerService;
+
 
     @Value("${token.email.ttl}")
     private Long tokenEmailTtl;
 
     public AuthResponse save(AuthRegister authRegister) {
-        String email = authRegister.getEmail();
-        if(accountRepository.existsByEmailIgnoreCase(email)) {
-            throw new UserAlreadyExistsException("Account with email [" + email + "] already exists");
-        }
-
         return authRegister.accept(accountRegisterVisitor);
+    }
+
+    public boolean existsByEmail(String email) {
+        return accountRepository.existsByEmailIgnoreCase(email);
     }
 
     public AuthResponse login(AuthLogin authLogin) {
@@ -109,16 +107,19 @@ public class AccountService {
     }
 
     public void sendEmailToRestorePassword(String email) {
+        if (!accountRepository.existsByEmailIgnoreCase(email)) {
+            throw new UserNotFoundException("Account with email [" + email + "] does not exist");
+        }
+
         String token = UUID.randomUUID().toString();
         TokenEmail tokenEmail = new TokenEmail(token, email, tokenEmailTtl);
-        EmailMessageInfo emailMessageInfo = new EmailMessageInfo(token,
+        EmailMessageDetailInfo emailMessageDetailInfo = new EmailMessageDetailInfo(token,
                 DEFAULT_USER,
                 email,
-                LocalDateTime.now().plusSeconds(tokenEmailTtl),
-                EmailMessageLinkType.CHANGE);
+                LocalDateTime.now().plusSeconds(tokenEmailTtl));
 
         tokenEmailRepository.save(tokenEmail);
-        emailMessageService.sendMessage(emailMessageInfo);
+        emailProducerService.sendMessage(emailMessageDetailInfo);
     }
 
     @Transactional
@@ -128,6 +129,7 @@ public class AccountService {
         Account account = accountRepository.findByEmailIgnoreCase(tokenEmail.getEmail())
                 .orElseThrow();
 
+        tokenEmailRepository.deleteById(token);
         account.setPassword(passwordEncoder.encode(newPassword));
     }
 
