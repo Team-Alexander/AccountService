@@ -53,9 +53,14 @@ public class AccountController {
         accountService.sendEmailToRestorePassword(email);
     }
 
-    @PostMapping("/password/new")
+    @PostMapping("/password/change")
     public void setNewPassword(@RequestBody String newPassword,
                                @RequestParam String token) {
         accountService.setNewPassword(newPassword, token);
+    }
+
+    @GetMapping
+    public boolean existsByEmail(@RequestParam String email) {
+        return accountService.existsByEmail(email);
     }
 }
