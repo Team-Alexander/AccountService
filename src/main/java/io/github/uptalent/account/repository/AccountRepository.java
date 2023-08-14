@@ -2,6 +2,7 @@ package io.github.uptalent.account.repository;
 
 import io.github.uptalent.account.model.entity.Account;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -11,4 +12,15 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     Optional<Account> findByEmailIgnoreCase(String email);
 
     boolean existsByEmailIgnoreCase(String email);
+
+    @Query(nativeQuery = true, value = "SELECT CASE WHEN t.firstname IS NOT NULL THEN CONCAT(t.firstname, ' ', t.lastname) "
+            + "WHEN s.fullname IS NOT NULL THEN s.fullname END AS name"
+            + " FROM account a"
+            + " LEFT OUTER JOIN talent_account ta ON a.id = ta.account_id"
+            + " LEFT OUTER JOIN talent t ON ta.talent_id = t.id"
+            + " LEFT OUTER JOIN sponsor_account sa ON a.id = sa.account_id"
+            + " LEFT OUTER JOIN sponsor s ON sa.sponsor_id = s.id"
+            + " WHERE a.email = :email"
+    )
+    String findAccountHolderNameByEmail(String email);
 }
