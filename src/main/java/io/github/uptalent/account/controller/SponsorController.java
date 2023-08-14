@@ -4,6 +4,7 @@ import io.github.uptalent.account.model.request.SponsorUpdate;
 import io.github.uptalent.account.model.response.AccountProfile;
 import io.github.uptalent.account.service.AccountService;
 import io.github.uptalent.account.service.SponsorService;
+import io.github.uptalent.starter.security.Role;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -11,6 +12,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import static io.github.uptalent.starter.util.Constants.USER_ID_KEY;
+import static io.github.uptalent.starter.util.Constants.USER_ROLE_KEY;
 
 @RestController
 @RequiredArgsConstructor
@@ -21,8 +23,10 @@ public class SponsorController {
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
-    public AccountProfile getSponsorProfile(@PathVariable Long id){
-        return sponsorService.getSponsorProfile(id);
+    public AccountProfile getSponsorProfile(@PathVariable Long id,
+                                            @RequestHeader(USER_ID_KEY) Long principalId,
+                                            @RequestHeader(USER_ROLE_KEY) Role role){
+        return sponsorService.getSponsorProfile(id, principalId, role);
     }
 
     @PatchMapping
@@ -35,8 +39,9 @@ public class SponsorController {
     @DeleteMapping
     @PreAuthorize("hasAuthority('SPONSOR')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteSponsor(@RequestHeader(USER_ID_KEY) Long id){
-        accountService.deleteProfile(id);
+    public void deleteSponsor(@RequestHeader(USER_ID_KEY) Long id,
+                              @RequestHeader(USER_ROLE_KEY) Role role){
+        accountService.deleteProfile(id, role);
     }
 
     @GetMapping("/balance")

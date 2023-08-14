@@ -12,19 +12,22 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+
+import static io.github.uptalent.starter.security.Role.SPONSOR;
+import static io.github.uptalent.starter.security.Role.TALENT;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class TalentService {
     private final TalentRepository talentRepository;
-    private final AccountSecurityService accountSecurityService;
     private final TalentMapper talentMapper;
 
-    public AccountProfile getTalentProfile(Long id) {
+    public AccountProfile getTalentProfile(Long id, Long principalId, Role role) {
         Talent talent = getTalentById(id);
-        Role role = accountSecurityService.getRoleFromAuthorities();
 
-        if (accountSecurityService.isPersonalProfile(id) || Role.SPONSOR.equals(role))
+        if ((Objects.equals(id, principalId) && role == TALENT) || role == SPONSOR)
             return talentMapper.toTalentFullProfile(talent);
         else
             return talentMapper.toTalentProfile(talent);
@@ -42,5 +45,10 @@ public class TalentService {
     public Author getAuthorById(long id) {
         return talentRepository.getAuthorById(id)
                 .orElseThrow(TalentNotFoundException::new);
+    }
+
+    @Transactional
+    public void save(Talent talent) {
+        talentRepository.save(talent);
     }
 }
