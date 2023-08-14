@@ -76,6 +76,7 @@ public class AccountService {
     }
 
     public void deleteProfile(Long id, Role role) {
+        //TODO: Add jwt to blacklist
         Account account = getAccountByIdAndRole(id, role);
 
         EmailMessageDetailInfo emailMessageDetailInfo = generateEmailMessage(account.getEmail(), emailAccountRestoreTtl);
