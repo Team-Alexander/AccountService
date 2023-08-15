@@ -63,4 +63,9 @@ public class AccountController {
     public boolean existsByEmail(@RequestParam String email) {
         return accountService.existsByEmail(email);
     }
+
+    @PostMapping("/restore")
+    public void restoreAccount(@RequestParam String token) {
+        accountService.restoreAccount(token);
+    }
 }

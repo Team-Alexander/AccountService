@@ -14,9 +14,15 @@ public class EmailProducerService {
     @Value("${rabbitmq.exchange}")
     private String exchange;
     @Value("${rabbitmq.routing-key.change.password}")
-    private String routingKey;
+    private String changePasswordRoutingKey;
+    @Value("${rabbitmq.routing-key.restore-account}")
+    private String restoreAccountRoutingKey;
 
-    public void sendMessage(EmailMessageDetailInfo message) {
-        rabbitTemplate.convertAndSend(exchange, routingKey, message);
+    public void sendChangePasswordMsg(EmailMessageDetailInfo message) {
+        rabbitTemplate.convertAndSend(exchange, changePasswordRoutingKey, message);
+    }
+
+    public void sendRestoreAccountMsg(EmailMessageDetailInfo message) {
+        rabbitTemplate.convertAndSend(exchange, restoreAccountRoutingKey, message);
     }
 }

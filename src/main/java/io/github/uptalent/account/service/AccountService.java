@@ -1,20 +1,20 @@
 package io.github.uptalent.account.service;
 
 import io.github.uptalent.account.exception.NoSuchRoleException;
+import io.github.uptalent.account.exception.TokenNotFoundException;
 import io.github.uptalent.account.exception.UserNotFoundException;
 import io.github.uptalent.account.model.common.Author;
 import io.github.uptalent.account.model.common.EmailMessageDetailInfo;
 import io.github.uptalent.account.model.entity.Account;
 import io.github.uptalent.account.model.entity.Sponsor;
 import io.github.uptalent.account.model.entity.Talent;
+import io.github.uptalent.account.model.hash.DeletedAccount;
 import io.github.uptalent.account.model.hash.TokenEmail;
 import io.github.uptalent.account.model.request.AuthLogin;
 import io.github.uptalent.account.model.request.AuthRegister;
 import io.github.uptalent.account.model.request.ChangePassword;
 import io.github.uptalent.account.repository.AccountRepository;
 import io.github.uptalent.account.repository.TokenEmailRepository;
-import io.github.uptalent.account.service.strategy.SponsorDeletionStrategy;
-import io.github.uptalent.account.service.strategy.TalentDeletionStrategy;
 import io.github.uptalent.account.service.visitor.AccountRegisterVisitor;
 import io.github.uptalent.account.service.visitor.AccountUpdateVisitor;
 import io.github.uptalent.account.model.request.AccountUpdate;
@@ -32,26 +32,23 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
-@RequiredArgsConstructor
 @Transactional
+@RequiredArgsConstructor
 public class AccountService {
-    private static final String DEFAULT_USER = "user";
-
     private final AccountUpdateVisitor accountUpdateVisitor;
     private final AccountRegisterVisitor accountRegisterVisitor;
-    private final AccountSecurityService accountSecurityService;
-    private final TalentDeletionStrategy talentDeletionStrategy;
-    private final SponsorDeletionStrategy sponsorDeletionStrategy;
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final TalentService talentService;
     private final SponsorService sponsorService;
     private final TokenEmailRepository tokenEmailRepository;
     private final EmailProducerService emailProducerService;
+    private final DeletedAccountService deletedAccountService;
 
-
-    @Value("${token.email.ttl}")
-    private Long tokenEmailTtl;
+    @Value("${email.password.ttl}")
+    private Long emailPasswordTtl;
+    @Value("${email.restore-account.ttl}")
+    private Long emailAccountRestoreTtl;
 
     public AuthResponse save(AuthRegister authRegister) {
         return authRegister.accept(accountRegisterVisitor);
@@ -63,8 +60,10 @@ public class AccountService {
 
     public AuthResponse login(AuthLogin authLogin) {
         String email = authLogin.getEmail();
-        Account foundAccount = accountRepository.findByEmailIgnoreCase(email)
-                .orElseThrow(() -> new UserNotFoundException("Account with email [" + email + "] does not exist"));
+        Account foundAccount = getAccountByEmail(email);
+
+        if(deletedAccountService.existsByEmail(email))
+            throw new BadCredentialsException("Account is deleted");
 
         if (!passwordEncoder.matches(authLogin.getPassword(), foundAccount.getPassword()))
             throw new BadCredentialsException("Invalid email or password");
@@ -76,14 +75,15 @@ public class AccountService {
         return accountUpdate.accept(id, accountUpdateVisitor);
     }
 
-    public void deleteProfile(Long id) {
-        Role role = accountSecurityService.getRoleFromAuthorities();
+    public void deleteProfile(Long id, Role role) {
+        //TODO: Add jwt to blacklist
+        Account account = getAccountByIdAndRole(id, role);
 
-        if (role.equals(Role.TALENT)) {
-            talentDeletionStrategy.deleteProfile(id);
-        } else if (role.equals(Role.SPONSOR)) {
-            sponsorDeletionStrategy.deleteProfile(id);
-        }
+        EmailMessageDetailInfo emailMessageDetailInfo = generateEmailMessage(account.getEmail(), emailAccountRestoreTtl);
+        String token = emailMessageDetailInfo.getUuid();
+        var deletedAccount = new DeletedAccount(token, account, emailAccountRestoreTtl);
+        deletedAccountService.saveTemporaryDeletedAccount(token, deletedAccount);
+        emailProducerService.sendRestoreAccountMsg(emailMessageDetailInfo);
     }
 
     public Author getAuthor(Long id, Role role) {
@@ -95,7 +95,6 @@ public class AccountService {
         throw new NoSuchRoleException();
     }
 
-    @Transactional
     public void changePassword(ChangePassword request, Long id, Role role) {
         Account account = getAccountByIdAndRole(id, role);
 
@@ -108,29 +107,39 @@ public class AccountService {
 
     public void sendEmailToRestorePassword(String email) {
         if (!accountRepository.existsByEmailIgnoreCase(email)) {
-            throw new UserNotFoundException("Account with email [" + email + "] does not exist");
+            throw new UserNotFoundException(email);
         }
 
-        String token = UUID.randomUUID().toString();
-        TokenEmail tokenEmail = new TokenEmail(token, email, tokenEmailTtl);
-        EmailMessageDetailInfo emailMessageDetailInfo = new EmailMessageDetailInfo(token,
-                DEFAULT_USER,
-                email,
-                LocalDateTime.now().plusSeconds(tokenEmailTtl));
-
-        tokenEmailRepository.save(tokenEmail);
-        emailProducerService.sendMessage(emailMessageDetailInfo);
+        EmailMessageDetailInfo emailMessageDetailInfo = generateEmailMessage(email, emailPasswordTtl);
+        emailProducerService.sendChangePasswordMsg(emailMessageDetailInfo);
     }
 
-    @Transactional
     public void setNewPassword(String newPassword, String token) {
-        TokenEmail tokenEmail = tokenEmailRepository.findById(token)
-                .orElseThrow();
-        Account account = accountRepository.findByEmailIgnoreCase(tokenEmail.getEmail())
-                .orElseThrow();
+        TokenEmail tokenEmail = getTokenEmail(token);
+        Account account = getAccountByEmail(tokenEmail.getEmail());
 
         tokenEmailRepository.deleteById(token);
         account.setPassword(passwordEncoder.encode(newPassword));
+    }
+
+    public void restoreAccount(String token) {
+        //TODO: Return jwt token
+        tokenEmailRepository.deleteById(token);
+        deletedAccountService.deleteTemporaryDeletedAccount(token);
+    }
+
+    public void save(Account account) {
+        accountRepository.save(account);
+    }
+
+    private TokenEmail getTokenEmail(String token) {
+        return tokenEmailRepository.findById(token)
+                .orElseThrow(TokenNotFoundException::new);
+    }
+
+    private Account getAccountByEmail(String email) {
+        return accountRepository.findByEmailIgnoreCase(email)
+                .orElseThrow(() -> new UserNotFoundException(email));
     }
 
     private AuthResponse generateAuthResponse(Account account) {
@@ -159,11 +168,24 @@ public class AccountService {
         return passwordEncoder.matches(password, encodedPassword);
     }
 
-    private Account getAccountByIdAndRole(Long id, Role role) {
+    public Account getAccountByIdAndRole(Long id, Role role) {
         if (role.equals(Role.TALENT)) {
             return talentService.getTalentById(id).getAccount();
         } else {
             return sponsorService.getSponsorById(id).getAccount();
         }
+    }
+
+    private EmailMessageDetailInfo generateEmailMessage(String email, Long ttl) {
+        String token = UUID.randomUUID().toString();
+        String name = accountRepository.findAccountHolderNameByEmail(email);
+        TokenEmail tokenEmail = new TokenEmail(token, email, ttl);
+        EmailMessageDetailInfo emailMessageDetailInfo = new EmailMessageDetailInfo(token,
+                name,
+                email,
+                LocalDateTime.now().plusSeconds(ttl));
+
+        tokenEmailRepository.save(tokenEmail);
+        return emailMessageDetailInfo;
     }
 }
