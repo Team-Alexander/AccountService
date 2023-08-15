@@ -7,6 +7,7 @@ import io.github.uptalent.account.service.TalentService;
 import io.github.uptalent.starter.security.Role;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -40,7 +41,9 @@ public class TalentController {
     @PreAuthorize("hasAuthority('TALENT')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteTalent(@RequestHeader(USER_ID_KEY) Long id,
-                             @RequestHeader(USER_ROLE_KEY) Role role){
-        accountService.deleteProfile(id, role);
+                             @RequestHeader(USER_ROLE_KEY) Role role,
+                             @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false)
+                                 String accessToken){
+        accountService.deleteProfile(id, role, accessToken);
     }
 }
