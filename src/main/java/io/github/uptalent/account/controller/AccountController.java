@@ -1,6 +1,7 @@
 package io.github.uptalent.account.controller;
 
 import io.github.uptalent.account.model.common.Author;
+import io.github.uptalent.account.model.common.JwtResponse;
 import io.github.uptalent.account.model.request.AuthLogin;
 import io.github.uptalent.account.model.request.AuthRegister;
 import io.github.uptalent.account.model.request.ChangePassword;
@@ -65,7 +66,7 @@ public class AccountController {
     }
 
     @PostMapping("/restore")
-    public void restoreAccount(@RequestParam String token) {
-        accountService.restoreAccount(token);
+    public JwtResponse restoreAccount(@RequestParam String token) {
+        return accountService.restoreAccount(token);
     }
 }

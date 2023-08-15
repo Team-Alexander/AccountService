@@ -1,10 +1,12 @@
 package io.github.uptalent.account.service;
 
+import io.github.uptalent.account.client.AuthClient;
 import io.github.uptalent.account.exception.NoSuchRoleException;
 import io.github.uptalent.account.exception.TokenNotFoundException;
 import io.github.uptalent.account.exception.UserNotFoundException;
 import io.github.uptalent.account.model.common.Author;
 import io.github.uptalent.account.model.common.EmailMessageDetailInfo;
+import io.github.uptalent.account.model.common.JwtResponse;
 import io.github.uptalent.account.model.entity.Account;
 import io.github.uptalent.account.model.entity.Sponsor;
 import io.github.uptalent.account.model.entity.Talent;
@@ -20,6 +22,7 @@ import io.github.uptalent.account.service.visitor.AccountUpdateVisitor;
 import io.github.uptalent.account.model.request.AccountUpdate;
 import io.github.uptalent.account.model.response.AccountProfile;
 import io.github.uptalent.account.model.response.AuthResponse;
+import io.github.uptalent.starter.security.JwtBlacklistService;
 import io.github.uptalent.starter.security.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -44,6 +47,8 @@ public class AccountService {
     private final TokenEmailRepository tokenEmailRepository;
     private final EmailProducerService emailProducerService;
     private final DeletedAccountService deletedAccountService;
+    private final JwtBlacklistService jwtBlackListService;
+    private final AuthClient authClient;
 
     @Value("${email.password.ttl}")
     private Long emailPasswordTtl;
@@ -75,15 +80,15 @@ public class AccountService {
         return accountUpdate.accept(id, accountUpdateVisitor);
     }
 
-    public void deleteProfile(Long id, Role role) {
-        //TODO: Add jwt to blacklist
+    public void deleteProfile(Long id, Role role, String accessToken) {
         Account account = getAccountByIdAndRole(id, role);
-
         EmailMessageDetailInfo emailMessageDetailInfo = generateEmailMessage(account.getEmail(), emailAccountRestoreTtl);
         String token = emailMessageDetailInfo.getUuid();
         var deletedAccount = new DeletedAccount(token, account, emailAccountRestoreTtl);
+
         deletedAccountService.saveTemporaryDeletedAccount(token, deletedAccount);
         emailProducerService.sendRestoreAccountMsg(emailMessageDetailInfo);
+        jwtBlackListService.addToBlacklist(accessToken);
     }
 
     public Author getAuthor(Long id, Role role) {
@@ -122,10 +127,16 @@ public class AccountService {
         account.setPassword(passwordEncoder.encode(newPassword));
     }
 
-    public void restoreAccount(String token) {
-        //TODO: Return jwt token
+    public JwtResponse restoreAccount(String token) {
+        DeletedAccount deletedAccount = deletedAccountService.getTemporaryDeletedAccount(token);
+        Account account = deletedAccount.getAccount();
+        AuthResponse authResponse = generateAuthResponse(account);
+        JwtResponse jwtResponse = authClient.loginAfterRestore(authResponse);
+
         tokenEmailRepository.deleteById(token);
         deletedAccountService.deleteTemporaryDeletedAccount(token);
+
+        return jwtResponse;
     }
 
     public void save(Account account) {
