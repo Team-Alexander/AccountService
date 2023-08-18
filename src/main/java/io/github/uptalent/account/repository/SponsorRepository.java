@@ -16,4 +16,7 @@ public interface SponsorRepository extends JpaRepository<Sponsor, Long> {
     @Query("SELECT new io.github.uptalent.account.model.common.Author(s.id, s.fullname, s.avatar) " +
             "FROM Sponsor s WHERE s.id = :id")
     Optional<Author> getAuthorById(long id);
+
+    @Query("SELECT s.avatar FROM Sponsor s WHERE s.id = :id")
+    Optional<String> findAvatarById(Long id);
 }

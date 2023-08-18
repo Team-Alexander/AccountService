@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static io.github.uptalent.starter.security.Role.SPONSOR;
 import static io.github.uptalent.starter.security.Role.TALENT;
@@ -50,5 +51,13 @@ public class TalentService {
     @Transactional
     public void save(Talent talent) {
         talentRepository.save(talent);
+    }
+
+    public Optional<String> findAvatarById(Long id) {
+        return talentRepository.findAvatarById(id);
+    }
+
+    public Optional<String> findBannerById(Long id) {
+        return talentRepository.findBannerById(id);
     }
 }
