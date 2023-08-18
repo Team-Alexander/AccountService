@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
+import java.util.Optional;
 
 import static io.github.uptalent.starter.security.Role.SPONSOR;
 
@@ -62,5 +63,9 @@ public class SponsorService {
     @Transactional
     public void save(Sponsor sponsor) {
         sponsorRepository.save(sponsor);
+    }
+
+    public Optional<String> findAvatarById(Long id) {
+        return sponsorRepository.findAvatarById(id);
     }
 }

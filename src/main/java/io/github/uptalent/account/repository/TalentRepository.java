@@ -16,4 +16,10 @@ public interface TalentRepository extends JpaRepository<Talent, Long> {
     @Query("SELECT new io.github.uptalent.account.model.common.Author(t.id, CONCAT(t.firstname, ' ', t.lastname), t.avatar) " +
             "FROM Talent t WHERE t.id = :id")
     Optional<Author> getAuthorById(long id);
+
+    @Query("SELECT t.avatar FROM Talent t WHERE t.id = :id")
+    Optional<String> findAvatarById(Long id);
+
+    @Query("SELECT t.banner FROM Talent t WHERE t.id = :id")
+    Optional<String> findBannerById(Long id);
 }
