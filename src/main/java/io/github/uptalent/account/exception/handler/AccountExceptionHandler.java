@@ -7,6 +7,7 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class AccountExceptionHandler {
@@ -28,7 +29,9 @@ public class AccountExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     @ExceptionHandler({
             InvalidAgeException.class,
-            NoSuchRoleException.class
+            NoSuchRoleException.class,
+            MaxUploadSizeExceededException.class,
+            InvalidImageFormatException.class
     })
     public ErrorResponse handlerBadRequestException(RuntimeException e) {
         return new ErrorResponse(e.getMessage());
