@@ -6,7 +6,7 @@ import io.github.uptalent.account.model.response.AuthResponse;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 
-@FeignClient("auth-service")
+@FeignClient("uptalent-auth")
 @Retry(name = "default")
 public interface AuthClient {
     @PostMapping("/api/v1/auth/loginAfterRestore")
