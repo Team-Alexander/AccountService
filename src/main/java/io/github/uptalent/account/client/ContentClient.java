@@ -5,7 +5,7 @@ import io.github.uptalent.account.model.request.AuthorUpdate;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.*;
 
-@FeignClient("content-service")
+@FeignClient("uptalent-content")
 @Retry(name = "default")
 public interface ContentClient {
     @PostMapping("/api/v1/content/proofs/author")
