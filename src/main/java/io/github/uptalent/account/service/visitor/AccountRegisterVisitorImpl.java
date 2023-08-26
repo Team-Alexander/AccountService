@@ -10,10 +10,15 @@ import io.github.uptalent.account.model.response.AuthResponse;
 import io.github.uptalent.account.repository.AccountRepository;
 import io.github.uptalent.account.repository.SponsorRepository;
 import io.github.uptalent.account.repository.TalentRepository;
+import io.github.uptalent.account.service.ReportService;
 import io.github.uptalent.starter.security.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import static io.github.uptalent.starter.model.enums.ModerationStatus.ACTIVE;
+import static io.github.uptalent.starter.security.Role.SPONSOR;
+import static io.github.uptalent.starter.security.Role.TALENT;
 
 @Service
 @RequiredArgsConstructor
@@ -22,10 +27,11 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
     private final SponsorRepository sponsorRepository;
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ReportService reportService;
 
     @Override
     public AuthResponse registerProfile(TalentRegister talentRegister) {
-        Account account = saveAccount(talentRegister, Role.TALENT);
+        Account account = saveAccount(talentRegister, TALENT);
         Talent talent = Talent.builder()
                 .lastname(talentRegister.getLastname())
                 .firstname(talentRegister.getFirstname())
@@ -34,11 +40,14 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
 
         talent = talentRepository.save(talent);
 
+        String name = talentRegister.getFirstname() + " " + talentRegister.getLastname();
+        reportService.checkToxicity(talent.getId(), name, TALENT);
+
         return AuthResponse.builder()
                 .id(talent.getId())
                 .name(talent.getFirstname())
                 .email(account.getEmail())
-                .role(Role.TALENT)
+                .role(TALENT)
                 .build();
     }
 
@@ -53,9 +62,12 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
 
         sponsor = sponsorRepository.save(sponsor);
 
+        String name = sponsor.getFullname();
+        reportService.checkToxicity(sponsor.getId(), name, SPONSOR);
+
         return AuthResponse.builder()
                 .id(sponsor.getId())
-                .name(sponsor.getFullname())
+                .name(name)
                 .email(account.getEmail())
                 .role(Role.SPONSOR)
                 .build();
@@ -66,6 +78,7 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
                 .email(authRegister.getEmail())
                 .password(passwordEncoder.encode(authRegister.getPassword()))
                 .role(role)
+                .status(ACTIVE)
                 .build();
 
         return accountRepository.save(account);

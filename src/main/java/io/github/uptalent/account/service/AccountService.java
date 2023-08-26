@@ -4,24 +4,24 @@ import io.github.uptalent.account.client.AuthClient;
 import io.github.uptalent.account.exception.NoSuchRoleException;
 import io.github.uptalent.account.exception.TokenNotFoundException;
 import io.github.uptalent.account.exception.UserNotFoundException;
-import io.github.uptalent.account.model.common.Author;
-import io.github.uptalent.account.model.common.EmailMessageDetailInfo;
-import io.github.uptalent.account.model.common.JwtResponse;
 import io.github.uptalent.account.model.entity.Account;
 import io.github.uptalent.account.model.entity.Sponsor;
 import io.github.uptalent.account.model.entity.Talent;
 import io.github.uptalent.account.model.hash.DeletedAccount;
 import io.github.uptalent.account.model.hash.TokenEmail;
+import io.github.uptalent.account.model.request.AccountUpdate;
 import io.github.uptalent.account.model.request.AuthLogin;
 import io.github.uptalent.account.model.request.AuthRegister;
 import io.github.uptalent.account.model.request.ChangePassword;
+import io.github.uptalent.account.model.response.AccountProfile;
+import io.github.uptalent.account.model.response.AuthResponse;
 import io.github.uptalent.account.repository.AccountRepository;
 import io.github.uptalent.account.repository.TokenEmailRepository;
 import io.github.uptalent.account.service.visitor.AccountRegisterVisitor;
 import io.github.uptalent.account.service.visitor.AccountUpdateVisitor;
-import io.github.uptalent.account.model.request.AccountUpdate;
-import io.github.uptalent.account.model.response.AccountProfile;
-import io.github.uptalent.account.model.response.AuthResponse;
+import io.github.uptalent.starter.model.common.Author;
+import io.github.uptalent.starter.model.common.EmailMessageDetailInfo;
+import io.github.uptalent.starter.model.response.JwtResponse;
 import io.github.uptalent.starter.security.JwtBlacklistService;
 import io.github.uptalent.starter.security.Role;
 import lombok.RequiredArgsConstructor;
@@ -81,7 +81,7 @@ public class AccountService {
     }
 
     public void deleteProfile(Long id, Role role, String accessToken) {
-        Account account = getAccountByIdAndRole(id, role);
+        Account account = getAccountByUserIdAndRole(id, role);
         EmailMessageDetailInfo emailMessageDetailInfo = generateEmailMessage(account.getEmail(), emailAccountRestoreTtl);
         String token = emailMessageDetailInfo.getUuid();
         var deletedAccount = new DeletedAccount(token, account, emailAccountRestoreTtl);
@@ -101,7 +101,7 @@ public class AccountService {
     }
 
     public void changePassword(ChangePassword request, Long id, Role role) {
-        Account account = getAccountByIdAndRole(id, role);
+        Account account = getAccountByUserIdAndRole(id, role);
 
         if (!isSamePasswords(request.getOldPassword(), account.getPassword())) {
             throw new RuntimeException();
@@ -148,7 +148,7 @@ public class AccountService {
                 .orElseThrow(TokenNotFoundException::new);
     }
 
-    private Account getAccountByEmail(String email) {
+    public Account getAccountByEmail(String email) {
         return accountRepository.findByEmailIgnoreCase(email)
                 .orElseThrow(() -> new UserNotFoundException(email));
     }
@@ -161,7 +161,7 @@ public class AccountService {
                     .id(sponsor.getId())
                     .name(sponsor.getFullname())
                     .email(account.getEmail())
-                    .role(Role.SPONSOR)
+                    .role(account.getRole())
                     .build();
         } else {
             Talent talent = talentService.getTalentByAccount(account);
@@ -170,7 +170,7 @@ public class AccountService {
                     .id(talent.getId())
                     .name(talent.getFirstname())
                     .email(account.getEmail())
-                    .role(Role.TALENT)
+                    .role(account.getRole())
                     .build();
         }
     }
@@ -179,7 +179,7 @@ public class AccountService {
         return passwordEncoder.matches(password, encodedPassword);
     }
 
-    public Account getAccountByIdAndRole(Long id, Role role) {
+    public Account getAccountByUserIdAndRole(Long id, Role role) {
         if (role.equals(Role.TALENT)) {
             return talentService.getTalentById(id).getAccount();
         } else {
@@ -189,7 +189,7 @@ public class AccountService {
 
     private EmailMessageDetailInfo generateEmailMessage(String email, Long ttl) {
         String token = UUID.randomUUID().toString();
-        String name = accountRepository.findAccountHolderNameByEmail(email);
+        String name = findAccountHolderNameByEmail(email);
         TokenEmail tokenEmail = new TokenEmail(token, email, ttl);
         EmailMessageDetailInfo emailMessageDetailInfo = new EmailMessageDetailInfo(token,
                 name,
@@ -198,5 +198,9 @@ public class AccountService {
 
         tokenEmailRepository.save(tokenEmail);
         return emailMessageDetailInfo;
+    }
+
+    public String findAccountHolderNameByEmail(String email) {
+        return accountRepository.findAccountHolderNameByEmail(email);
     }
 }
