@@ -3,7 +3,9 @@ package io.github.uptalent.account.controller;
 import io.github.uptalent.account.model.request.SponsorUpdate;
 import io.github.uptalent.account.model.response.AccountProfile;
 import io.github.uptalent.account.service.AccountService;
+import io.github.uptalent.account.service.ReportService;
 import io.github.uptalent.account.service.SponsorService;
+import io.github.uptalent.starter.model.request.ReportRequest;
 import io.github.uptalent.starter.security.Role;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -21,6 +23,7 @@ import static io.github.uptalent.starter.util.Constants.USER_ROLE_KEY;
 public class SponsorController {
     private final AccountService accountService;
     private final SponsorService sponsorService;
+    private final ReportService reportService;
 
     @GetMapping("/{id}")
     @PreAuthorize("isAuthenticated()")
@@ -58,5 +61,12 @@ public class SponsorController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void updateSponsorBalance(@RequestHeader(USER_ID_KEY) Long id, @RequestBody Long balance){
         sponsorService.updateSponsorBalanceById(id, balance);
+    }
+
+    @PostMapping("/{id}/report")
+    @PreAuthorize("isAuthenticated()")
+    public void reportSponsor(@PathVariable Long id,
+                             @RequestBody @Valid ReportRequest reportRequest){
+        reportService.reportSponsor(id, reportRequest);
     }
 }

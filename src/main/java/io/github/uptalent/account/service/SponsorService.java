@@ -2,13 +2,16 @@ package io.github.uptalent.account.service;
 
 import io.github.uptalent.account.exception.SponsorNotFoundException;
 import io.github.uptalent.account.mapper.SponsorMapper;
-import io.github.uptalent.account.model.common.Author;
 import io.github.uptalent.account.model.entity.Account;
 import io.github.uptalent.account.model.entity.Sponsor;
 import io.github.uptalent.account.model.response.AccountProfile;
 import io.github.uptalent.account.repository.SponsorRepository;
+import io.github.uptalent.starter.model.common.Author;
+import io.github.uptalent.starter.model.enums.ModerationStatus;
 import io.github.uptalent.starter.security.Role;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +37,10 @@ public class SponsorService {
                     .avatar(sponsor.getAvatar())
                     .name(sponsor.getFullname())
                     .build();
+    }
+
+    public Page<Sponsor> getAllByAccountStatus(PageRequest pageRequest, ModerationStatus status) {
+        return sponsorRepository.findAllByAccountStatus(pageRequest, status);
     }
 
     public Sponsor getSponsorById(Long id) {

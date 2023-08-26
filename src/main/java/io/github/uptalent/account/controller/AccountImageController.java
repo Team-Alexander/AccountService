@@ -6,6 +6,7 @@ import io.github.uptalent.starter.security.Role;
 import io.github.uptalent.starter.util.enums.EnumValue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.MediaType;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,6 +25,7 @@ public class AccountImageController {
             path = "/upload",
             consumes = MediaType.MULTIPART_FORM_DATA_VALUE
     )
+    @PreAuthorize("isAuthenticated()")
     public void uploadImage(@RequestHeader(USER_ID_KEY) Long id,
                             @RequestHeader(USER_ROLE_KEY) Role role,
                             @RequestParam
