@@ -1,7 +1,7 @@
 package io.github.uptalent.account.client;
 
 import io.github.resilience4j.retry.annotation.Retry;
-import io.github.uptalent.account.model.common.Comment;
+import io.github.uptalent.starter.model.common.Comment;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
