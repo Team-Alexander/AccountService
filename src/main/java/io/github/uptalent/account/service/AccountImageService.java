@@ -2,8 +2,11 @@ package io.github.uptalent.account.service;
 
 import com.amazonaws.services.s3.AmazonS3;
 import com.amazonaws.services.s3.model.ObjectMetadata;
+import io.github.uptalent.account.client.ContentClient;
 import io.github.uptalent.account.exception.EmptyImageException;
 import io.github.uptalent.account.exception.InvalidImageFormatException;
+import io.github.uptalent.account.mapper.SponsorMapper;
+import io.github.uptalent.account.mapper.TalentMapper;
 import io.github.uptalent.account.model.entity.Sponsor;
 import io.github.uptalent.account.model.entity.Talent;
 import io.github.uptalent.account.model.enums.ImageType;
@@ -40,6 +43,9 @@ public class AccountImageService {
     private final AmazonS3 s3;
     private final TalentService talentService;
     private final SponsorService sponsorService;
+    private final ContentClient contentClient;
+    private final TalentMapper talentMapper;
+    private final SponsorMapper sponsorMapper;
     private final Set<String> validFormats = Set.of("jpeg", "jpg", "png", "gif", "bmp", "webp", "tiff", "svg");
     private final Set<String> validFormatsForCompression = Set.of("jpeg", "jpg", "png");
 
@@ -137,10 +143,12 @@ public class AccountImageService {
             if (imageType == AVATAR) talent.setAvatar(imageUrl);
             else talent.setBanner(imageUrl);
             talentService.save(talent);
+            contentClient.updateProofsByAuthor(talentMapper.toAuthorUpdate(talent));
         } else if (role == SPONSOR) {
             Sponsor sponsor = sponsorService.getSponsorById(id);
             sponsor.setAvatar(imageUrl);
             sponsorService.save(sponsor);
+            contentClient.updateVacanciesByAuthor(sponsorMapper.toAuthorUpdate(sponsor));
         }
     }
 }
