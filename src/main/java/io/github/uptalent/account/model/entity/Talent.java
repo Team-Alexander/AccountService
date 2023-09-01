@@ -5,6 +5,8 @@ import lombok.*;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Entity
 @Getter
@@ -12,6 +14,7 @@ import java.time.LocalDate;
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@EqualsAndHashCode
 @Builder
 public class Talent {
     @Id
@@ -24,6 +27,7 @@ public class Talent {
             joinColumns = @JoinColumn(name = "talent_id"),
             inverseJoinColumns = @JoinColumn(name = "account_id")
     )
+    @EqualsAndHashCode.Exclude
     private Account account;
 
     @Column(length = 15, nullable = false, name = "lastname")
@@ -48,4 +52,11 @@ public class Talent {
 
     @Column(length = 2250, name = "about_me")
     private String aboutMe;
+
+    @ManyToMany(cascade = CascadeType.ALL,  fetch = FetchType.LAZY)
+    @JoinTable(name = "talent_skills",
+            joinColumns = @JoinColumn(name = "talent_id"),
+            inverseJoinColumns = @JoinColumn(name = "skill_id"))
+    @EqualsAndHashCode.Exclude
+    private Set<Skill> skills = new LinkedHashSet<>();
 }

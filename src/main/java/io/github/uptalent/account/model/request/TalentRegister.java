@@ -22,6 +22,8 @@ public class TalentRegister extends AuthRegister {
     @Size(max = 15, message = "Firstname must be less than 15 characters")
     private String lastname;
 
+    private SkillRequest skillRequest;
+
     public AuthResponse accept(AccountRegisterVisitor visitor) {
         return visitor.registerProfile(this);
     }

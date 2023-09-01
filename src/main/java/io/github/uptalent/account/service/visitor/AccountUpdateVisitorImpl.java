@@ -13,6 +13,7 @@ import io.github.uptalent.account.model.response.AccountProfile;
 import io.github.uptalent.account.repository.SponsorRepository;
 import io.github.uptalent.account.repository.TalentRepository;
 import io.github.uptalent.account.service.ReportService;
+import io.github.uptalent.account.service.SkillService;
 import io.github.uptalent.account.service.SponsorService;
 import io.github.uptalent.account.service.TalentService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class AccountUpdateVisitorImpl implements AccountUpdateVisitor {
     private final TalentAgeRange talentAgeRange;
     private final ContentClient contentClient;
     private final ReportService reportService;
+    private final SkillService skillService;
 
     @Override
     public AccountProfile updateProfile(Long id, TalentUpdate talentUpdate) {
@@ -55,14 +57,21 @@ public class AccountUpdateVisitorImpl implements AccountUpdateVisitor {
             }
             talentToUpdate.setBirthday(talentUpdate.getBirthday());
         }
+
         if(talentUpdate.getLocation() != null) {
             talentToUpdate.setLocation(talentUpdate.getLocation());
         }
+
         if(talentUpdate.getAboutMe() != null) {
             String aboutMe = talentUpdate.getAboutMe();
             sb.append(" ").append(aboutMe);
             talentToUpdate.setAboutMe(aboutMe);
         }
+
+        if(talentUpdate.getSkillRequest() != null) {
+            skillService.updateTalentSkills(talentToUpdate.getId(), talentUpdate.getSkillRequest());
+        }
+
         Talent updatedTalent = talentRepository.save(talentToUpdate);
 
         contentClient.updateProofsByAuthor(talentMapper.toAuthorUpdate(updatedTalent));

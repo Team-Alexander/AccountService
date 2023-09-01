@@ -15,7 +15,7 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class TalentUpdate extends AccountUpdate{
+public class TalentUpdate extends AccountUpdate {
     @NotBlank(message = "Lastname should not be blank")
     @Size(max = 15, message = "Lastname must be less than 15 characters")
     private String lastname;
@@ -31,6 +31,8 @@ public class TalentUpdate extends AccountUpdate{
 
     @Size(max = 2250, message = "About me should be less than 2250 characters")
     private String aboutMe;
+
+    private SkillRequest skillRequest;
 
     public AccountProfile accept(Long id, AccountUpdateVisitor visitor) {
         return visitor.updateProfile(id, this);

@@ -11,6 +11,7 @@ import io.github.uptalent.account.repository.AccountRepository;
 import io.github.uptalent.account.repository.SponsorRepository;
 import io.github.uptalent.account.repository.TalentRepository;
 import io.github.uptalent.account.service.ReportService;
+import io.github.uptalent.account.service.SkillService;
 import io.github.uptalent.starter.security.Role;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +29,7 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
     private final AccountRepository accountRepository;
     private final PasswordEncoder passwordEncoder;
     private final ReportService reportService;
+    private final SkillService skillService;
 
     @Override
     public AuthResponse registerProfile(TalentRegister talentRegister) {
@@ -39,6 +41,10 @@ public class AccountRegisterVisitorImpl implements AccountRegisterVisitor{
                 .build();
 
         talent = talentRepository.save(talent);
+
+        if(talentRegister.getSkillRequest() != null) {
+            skillService.updateTalentSkills(talent.getId(), talentRegister.getSkillRequest());
+        }
 
         String name = talentRegister.getFirstname() + " " + talentRegister.getLastname();
         reportService.checkToxicity(talent.getId(), name, TALENT);
