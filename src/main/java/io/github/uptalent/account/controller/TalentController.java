@@ -60,7 +60,7 @@ public class TalentController {
     public void deleteTalent(@RequestHeader(USER_ID_KEY) Long id,
                              @RequestHeader(USER_ROLE_KEY) Role role,
                              @RequestHeader(value = HttpHeaders.AUTHORIZATION, required = false)
-                                 String accessToken){
+                             String accessToken){
         accountService.deleteProfile(id, role, accessToken);
     }
 
