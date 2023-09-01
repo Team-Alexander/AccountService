@@ -14,7 +14,8 @@ public class AccountExceptionHandler {
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler({
             UserNotFoundException.class,
-            TokenNotFoundException.class
+            TokenNotFoundException.class,
+            SkillNotFoundException.class,
     })
     public ErrorResponse handlerNotFoundException(RuntimeException e) {
         return new ErrorResponse(e.getMessage());
