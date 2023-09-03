@@ -69,4 +69,9 @@ public class AccountController {
     public JwtResponse restoreAccount(@RequestParam String token) {
         return accountService.restoreAccount(token);
     }
+
+    @GetMapping("/{id}/email")
+    public String getAccountEmailById(@PathVariable Long id) {
+        return accountService.getAccountEmailById(id);
+    }
 }

@@ -143,6 +143,10 @@ public class AccountService {
         accountRepository.save(account);
     }
 
+    public String getAccountEmailById(Long id) {
+        return accountRepository.getAccountEmailById(id);
+    }
+
     private TokenEmail getTokenEmail(String token) {
         return tokenEmailRepository.findById(token)
                 .orElseThrow(TokenNotFoundException::new);

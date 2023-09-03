@@ -28,4 +28,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     String findAccountHolderNameByEmail(String email);
 
     Page<Account> findAllByStatus(ModerationStatus moderationStatus, Pageable pageable);
+
+    @Query("SELECT a.email from Account a where a.id = :id")
+    String getAccountEmailById(Long id);
 }
