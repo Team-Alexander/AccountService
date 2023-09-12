@@ -1,5 +1,6 @@
 package io.github.uptalent.account.service;
 
+import io.github.uptalent.account.exception.IllegalAdminActionException;
 import io.github.uptalent.account.mapper.SponsorMapper;
 import io.github.uptalent.account.mapper.TalentMapper;
 import io.github.uptalent.account.model.entity.Account;
@@ -21,8 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.List;
 
-import static io.github.uptalent.starter.model.enums.ModerationStatus.ACTIVE;
-import static io.github.uptalent.starter.model.enums.ModerationStatus.BLOCKED;
+import static io.github.uptalent.starter.model.enums.ModerationStatus.*;
 
 @Service
 @Transactional
@@ -61,6 +61,8 @@ public class AdminService {
 
     //TODO: Change status to BLOCKED for all content
     public void blockUser(AccountModerationStatusChange accountModerationStatusChange) {
+        validateUserStatus(accountModerationStatusChange, BLOCKED);
+
         Account account = updateAccountStatus(accountModerationStatusChange, BLOCKED);
         String email = account.getEmail();
 
@@ -72,6 +74,8 @@ public class AdminService {
 
     //TODO: Change status to ACTIVE for all content
     public void unblockUser(AccountModerationStatusChange accountModerationStatusChange) {
+        validateUserStatus(accountModerationStatusChange, ACTIVE);
+
         Account account = updateAccountStatus(accountModerationStatusChange, ACTIVE);
         String email = account.getEmail();
 
@@ -82,6 +86,7 @@ public class AdminService {
     }
 
     public void activateUser(AccountModerationStatusChange accountModerationStatusChange) {
+        validateUserStatus(accountModerationStatusChange, ACTIVE);
         updateAccountStatus(accountModerationStatusChange, ACTIVE);
     }
 
@@ -104,5 +109,14 @@ public class AdminService {
                 .username(accountService.findAccountHolderNameByEmail(email))
                 .email(email)
                 .build();
+    }
+
+    private void validateUserStatus(AccountModerationStatusChange accountModerationStatusChange, ModerationStatus status) {
+        Long id = accountModerationStatusChange.getId();
+        Role role = Role.valueOf(accountModerationStatusChange.getRole());
+        Account account = accountService.getAccountByUserIdAndRole(id, role);
+
+        if (account.getStatus() == status)
+            throw new IllegalAdminActionException(status);
     }
 }
