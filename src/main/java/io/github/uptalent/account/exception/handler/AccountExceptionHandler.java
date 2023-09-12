@@ -32,7 +32,8 @@ public class AccountExceptionHandler {
             InvalidAgeException.class,
             NoSuchRoleException.class,
             MaxUploadSizeExceededException.class,
-            InvalidImageFormatException.class
+            InvalidImageFormatException.class,
+            IllegalAdminActionException.class
     })
     public ErrorResponse handlerBadRequestException(RuntimeException e) {
         return new ErrorResponse(e.getMessage());
