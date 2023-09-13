@@ -52,8 +52,7 @@ public class AdminControllerTest {
                 .perform(MockMvcRequestBuilders.get("/api/v1/account/admin/users")
                         .param("page", String.valueOf(page))
                         .param("size", String.valueOf(size))
-                        .param("status", status)
-                        .accept(MediaType.APPLICATION_JSON))
+                        .param("status", status))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content[*]", hasSize(usersPage.getContent().size())))
                 .andExpect(jsonPath("$.totalPages").value(usersPage.getTotalPages()));
