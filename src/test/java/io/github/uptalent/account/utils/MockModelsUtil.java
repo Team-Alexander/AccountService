@@ -1,21 +1,21 @@
 package io.github.uptalent.account.utils;
 
-import io.github.uptalent.account.model.entity.Account;
-import io.github.uptalent.account.model.entity.Skill;
-import io.github.uptalent.account.model.entity.Talent;
+import io.github.uptalent.account.model.entity.*;
 import io.github.uptalent.account.model.request.AccountModerationStatusChange;
 import io.github.uptalent.account.model.request.SkillRequest;
 import io.github.uptalent.account.model.response.AccountProfileReport;
 import io.github.uptalent.account.model.response.SkillResponse;
 import io.github.uptalent.starter.model.common.EmailMessageGeneralInfo;
 import io.github.uptalent.starter.model.enums.ModerationStatus;
+import io.github.uptalent.starter.model.request.ReportRequest;
 import io.github.uptalent.starter.pagination.PageWithMetadata;
+import io.github.uptalent.starter.security.Role;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.text.NumberFormat;
+import java.util.*;
 
+import static io.github.uptalent.starter.model.enums.ModerationStatus.ACTIVE;
+import static io.github.uptalent.starter.security.Role.SPONSOR;
 import static io.github.uptalent.starter.security.Role.TALENT;
 
 public final class MockModelsUtil {
@@ -60,6 +60,17 @@ public final class MockModelsUtil {
                 .build();
     }
 
+    public static Account generateAccountWithRole(Role role) {
+        return Account.builder()
+                .id(1L)
+                .email("test@email.com")
+                .password("password")
+                .role(role)
+                .status(ACTIVE)
+                .reports(new ArrayList<>())
+                .build();
+    }
+
     public static EmailMessageGeneralInfo generateEmailMessageGeneralInfo() {
         return new EmailMessageGeneralInfo(null, "test@email.com");
     }
@@ -100,7 +111,35 @@ public final class MockModelsUtil {
                 .firstname("Test")
                 .lastname("Test")
                 .avatar("avatar")
+                .account(generateAccountWithRole(TALENT))
                 .skills(new HashSet<>(generateSkills()))
                 .build();
+    }
+
+    public static Sponsor generateSponsor() {
+        return Sponsor.builder()
+                .id(1L)
+                .fullname("Test")
+                .avatar("avatar")
+                .account(generateAccountWithRole(SPONSOR))
+                .build();
+    }
+
+    public static Report generateReport(String message, Account account) {
+        return Report.builder()
+                .message(message)
+                .account(account)
+                .build();
+    }
+
+    public static ReportRequest  generateReportRequest() {
+        return new ReportRequest("test");
+    }
+
+    public static String generateJsonToxicityScore(float score) {
+        NumberFormat nf = NumberFormat.getNumberInstance(Locale.US);
+        String scoreFormatted = nf.format(score);
+        return String.format("{\"attributeScores\": {\"TOXICITY\": " +
+                "{\"summaryScore\": {\"value\": %s}}}}", scoreFormatted);
     }
 }
